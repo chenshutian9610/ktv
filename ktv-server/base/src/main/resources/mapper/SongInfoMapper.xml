@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.tree.ktv.mapper.SongInfoMapper">
+  <resultMap id="BaseResultMap" type="org.tree.ktv.model.SongInfo">
+    <id column="song_id" jdbcType="BIGINT" property="songId" />
+    <result column="singer_id" jdbcType="BIGINT" property="singerId" />
+    <result column="song_name" jdbcType="VARCHAR" property="songName" />
+    <result column="song_name_abbr" jdbcType="VARCHAR" property="songNameAbbr" />
+    <result column="song_language" jdbcType="VARCHAR" property="songLanguage" />
+    <result column="song_file_name" jdbcType="VARCHAR" property="songFileName" />
+    <result column="duration" jdbcType="VARCHAR" property="duration" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    song_id, singer_id, song_name, song_name_abbr, song_language, song_file_name, duration
+  </sql>
+  <select id="selectByExample" parameterType="org.tree.ktv.model.SongInfoExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from song_info
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from song_info
+    where song_id = #{songId,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from song_info
+    where song_id = #{songId,jdbcType=BIGINT}
+  </delete>
+  <delete id="deleteByExample" parameterType="org.tree.ktv.model.SongInfoExample">
+    delete from song_info
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="org.tree.ktv.model.SongInfo">
+    insert into song_info (song_id, singer_id, song_name, 
+      song_name_abbr, song_language, song_file_name, 
+      duration)
+    values (#{songId,jdbcType=BIGINT}, #{singerId,jdbcType=BIGINT}, #{songName,jdbcType=VARCHAR}, 
+      #{songNameAbbr,jdbcType=VARCHAR}, #{songLanguage,jdbcType=VARCHAR}, #{songFileName,jdbcType=VARCHAR}, 
+      #{duration,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="org.tree.ktv.model.SongInfo">
+    insert into song_info
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="songId != null">
+        song_id,
+      </if>
+      <if test="singerId != null">
+        singer_id,
+      </if>
+      <if test="songName != null">
+        song_name,
+      </if>
+      <if test="songNameAbbr != null">
+        song_name_abbr,
+      </if>
+      <if test="songLanguage != null">
+        song_language,
+      </if>
+      <if test="songFileName != null">
+        song_file_name,
+      </if>
+      <if test="duration != null">
+        duration,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="songId != null">
+        #{songId,jdbcType=BIGINT},
+      </if>
+      <if test="singerId != null">
+        #{singerId,jdbcType=BIGINT},
+      </if>
+      <if test="songName != null">
+        #{songName,jdbcType=VARCHAR},
+      </if>
+      <if test="songNameAbbr != null">
+        #{songNameAbbr,jdbcType=VARCHAR},
+      </if>
+      <if test="songLanguage != null">
+        #{songLanguage,jdbcType=VARCHAR},
+      </if>
+      <if test="songFileName != null">
+        #{songFileName,jdbcType=VARCHAR},
+      </if>
+      <if test="duration != null">
+        #{duration,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="org.tree.ktv.model.SongInfoExample" resultType="java.lang.Long">
+    select count(*) from song_info
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update song_info
+    <set>
+      <if test="record.songId != null">
+        song_id = #{record.songId,jdbcType=BIGINT},
+      </if>
+      <if test="record.singerId != null">
+        singer_id = #{record.singerId,jdbcType=BIGINT},
+      </if>
+      <if test="record.songName != null">
+        song_name = #{record.songName,jdbcType=VARCHAR},
+      </if>
+      <if test="record.songNameAbbr != null">
+        song_name_abbr = #{record.songNameAbbr,jdbcType=VARCHAR},
+      </if>
+      <if test="record.songLanguage != null">
+        song_language = #{record.songLanguage,jdbcType=VARCHAR},
+      </if>
+      <if test="record.songFileName != null">
+        song_file_name = #{record.songFileName,jdbcType=VARCHAR},
+      </if>
+      <if test="record.duration != null">
+        duration = #{record.duration,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update song_info
+    set song_id = #{record.songId,jdbcType=BIGINT},
+      singer_id = #{record.singerId,jdbcType=BIGINT},
+      song_name = #{record.songName,jdbcType=VARCHAR},
+      song_name_abbr = #{record.songNameAbbr,jdbcType=VARCHAR},
+      song_language = #{record.songLanguage,jdbcType=VARCHAR},
+      song_file_name = #{record.songFileName,jdbcType=VARCHAR},
+      duration = #{record.duration,jdbcType=VARCHAR}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="org.tree.ktv.model.SongInfo">
+    update song_info
+    <set>
+      <if test="singerId != null">
+        singer_id = #{singerId,jdbcType=BIGINT},
+      </if>
+      <if test="songName != null">
+        song_name = #{songName,jdbcType=VARCHAR},
+      </if>
+      <if test="songNameAbbr != null">
+        song_name_abbr = #{songNameAbbr,jdbcType=VARCHAR},
+      </if>
+      <if test="songLanguage != null">
+        song_language = #{songLanguage,jdbcType=VARCHAR},
+      </if>
+      <if test="songFileName != null">
+        song_file_name = #{songFileName,jdbcType=VARCHAR},
+      </if>
+      <if test="duration != null">
+        duration = #{duration,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where song_id = #{songId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="org.tree.ktv.model.SongInfo">
+    update song_info
+    set singer_id = #{singerId,jdbcType=BIGINT},
+      song_name = #{songName,jdbcType=VARCHAR},
+      song_name_abbr = #{songNameAbbr,jdbcType=VARCHAR},
+      song_language = #{songLanguage,jdbcType=VARCHAR},
+      song_file_name = #{songFileName,jdbcType=VARCHAR},
+      duration = #{duration,jdbcType=VARCHAR}
+    where song_id = #{songId,jdbcType=BIGINT}
+  </update>
+  <select id="querySelective" parameterType="map" resultMap="BaseResultMap">
+    select
+    <if test="example.distinct">
+      distinct
+    </if>
+    ${args} from song_info
+    <if test="example != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+    <if test="example.orderByClause != null">
+      order by ${example.orderByClause}
+    </if>
+  </select>
+  <insert id="insertSelectiveWithGeneratedKey" keyProperty="songId" parameterType="org.tree.ktv.model.SongInfo" useGeneratedKeys="true">
+    insert into song_info
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="songId != null">
+        song_id,
+      </if>
+      <if test="singerId != null">
+        singer_id,
+      </if>
+      <if test="songName != null">
+        song_name,
+      </if>
+      <if test="songNameAbbr != null">
+        song_name_abbr,
+      </if>
+      <if test="songLanguage != null">
+        song_language,
+      </if>
+      <if test="songFileName != null">
+        song_file_name,
+      </if>
+      <if test="duration != null">
+        duration,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="songId != null">
+        #{songId,jdbcType=BIGINT},
+      </if>
+      <if test="singerId != null">
+        #{singerId,jdbcType=BIGINT},
+      </if>
+      <if test="songName != null">
+        #{songName,jdbcType=VARCHAR},
+      </if>
+      <if test="songNameAbbr != null">
+        #{songNameAbbr,jdbcType=VARCHAR},
+      </if>
+      <if test="songLanguage != null">
+        #{songLanguage,jdbcType=VARCHAR},
+      </if>
+      <if test="songFileName != null">
+        #{songFileName,jdbcType=VARCHAR},
+      </if>
+      <if test="duration != null">
+        #{duration,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <insert id="insertBatchSelective" parameterType="java.util.List">
+    insert into song_info
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="list[0].songId!=null">
+        song_id,
+      </if>
+      <if test="list[0].singerId!=null">
+        singer_id,
+      </if>
+      <if test="list[0].songName!=null">
+        song_name,
+      </if>
+      <if test="list[0].songNameAbbr!=null">
+        song_name_abbr,
+      </if>
+      <if test="list[0].songLanguage!=null">
+        song_language,
+      </if>
+      <if test="list[0].songFileName!=null">
+        song_file_name,
+      </if>
+      <if test="list[0].duration!=null">
+        duration,
+      </if>
+    </trim>
+     values 
+    <foreach collection="list" index="index" item="item" separator=",">
+      <trim prefix=" (" suffix=")" suffixOverrides=",">
+        <if test="item.songId!=null">
+          #{item.songId,jdbcType=BIGINT},
+        </if>
+        <if test="item.singerId!=null">
+          #{item.singerId,jdbcType=BIGINT},
+        </if>
+        <if test="item.songName!=null">
+          #{item.songName,jdbcType=VARCHAR},
+        </if>
+        <if test="item.songNameAbbr!=null">
+          #{item.songNameAbbr,jdbcType=VARCHAR},
+        </if>
+        <if test="item.songLanguage!=null">
+          #{item.songLanguage,jdbcType=VARCHAR},
+        </if>
+        <if test="item.songFileName!=null">
+          #{item.songFileName,jdbcType=VARCHAR},
+        </if>
+        <if test="item.duration!=null">
+          #{item.duration,jdbcType=VARCHAR},
+        </if>
+      </trim>
+    </foreach>
+  </insert>
+</mapper>

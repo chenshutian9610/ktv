@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+    <context:property-placeholder location="classpath:conf.properties"/>
+    <context:component-scan base-package="org.tree.commons.support.mapper"/>
+    <context:component-scan base-package="org.tree.ktv"/>
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close"
+          p:url="${jdbc.url}"
+          p:driverClassName="${jdbc.driver}"
+          p:username="${jdbc.username}"
+          p:password="${jdbc.password}"
+          p:initialSize="10"
+          p:minIdle="10"
+          p:maxActive="200"
+          p:maxWait="60000"
+          p:timeBetweenEvictionRunsMillis="60000"
+          p:minEvictableIdleTimeMillis="300000"
+          p:validationQuery="select 1"
+          p:testWhileIdle="true"/>
+
+    <bean class="org.springframework.jdbc.core.JdbcTemplate" p:dataSource-ref="dataSource"/>
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+          p:dataSource-ref="dataSource"/>
+
+    <bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean"
+          p:dataSource-ref="dataSource"
+          p:configLocation="classpath:mybatis-config.xml"
+          p:mapperLocations="classpath:mapper/*Mapper.xml"/>
+    <bean id="session" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg ref="sessionFactory"/>
+    </bean>
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer" p:basePackage="org.tree.ktv.mapper"/>
+
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig"
+          p:maxTotal="${redis.pool.maxTotal}"
+          p:maxIdle="${redis.pool.maxIdle}"
+          p:minIdle="${redis.pool.minIdle}"
+          p:timeBetweenEvictionRunsMillis="${redis.pool.timeBetweenEvictionRunsMillis}"
+          p:minEvictableIdleTimeMillis="${redis.pool.minEvictableIdleTimeMillis}"
+          p:testOnBorrow="${redis.pool.testOnBorrow}"/>
+
+    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"
+          p:hostName="${redis.host}"
+          p:password="${redis.password}"
+          p:port="${redis.port}"
+          p:poolConfig-ref="jedisPoolConfig"/>
+
+    <bean id="jackson2JsonRedisSerializer" class="org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer"/>
+    <bean id="stringRedisSerializer" class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate"
+          p:connectionFactory-ref="jedisConnectionFactory"
+          p:keySerializer-ref="stringRedisSerializer"
+          p:valueSerializer-ref="jackson2JsonRedisSerializer"
+          p:hashKeySerializer-ref="stringRedisSerializer"
+          p:hashValueSerializer-ref="jackson2JsonRedisSerializer"/>
+
+    <!--<bean id="stringRedisTemplate" class="org.springframework.data.redis.core.StringRedisTemplate" p:connectionFactory-ref="jedisConnectionFactory"/>-->
+</beans>
