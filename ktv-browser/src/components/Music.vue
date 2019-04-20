@@ -286,7 +286,7 @@
           console.warn('跳过“收藏”')
           return;
         }
-        if (this.favoriteMusics.filter((favorite) => {
+        if (add && this.favoriteMusics.filter((favorite) => {
           return favorite.songId == music.songId
         }).length > 0)
           return;
