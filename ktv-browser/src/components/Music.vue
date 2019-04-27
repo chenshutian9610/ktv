@@ -1,9 +1,9 @@
 <template>
-  <el-container style="border: 1px solid #eee">
+  <el-container :style="pageStyle">
 
     <!-- 侧边栏 -->
     <transition name="el-zoom-in-center">
-      <el-aside width="20%" v-if="asideShow" style="height: 57em" align="left">
+      <el-aside width="20%" v-if="asideShow" :style="sideBarStyle" align="left">
         <el-menu :default-openeds="['1', '2']">
 
           <!-- 我的收藏 -->
@@ -41,7 +41,8 @@
       <!-- 标题栏 -->
       <el-header style="height: 4em">
         <!-- 搜索 -->
-        <div align="left">&emsp;&emsp;
+        <div align="left">
+          <i @click="resetChoose()" class="el-icon-menu"></i>&ensp;
           <el-input placeholder="搜索歌曲" v-model="condition.value" style="width: 60%" align="left">
             <el-select v-model="condition.type" slot="prepend" placeholder="歌曲名称" style="width: 8em">
               <el-option label="歌曲名称" value="1"></el-option>
@@ -64,7 +65,6 @@
               <el-button type="text" style="font-size: 1.5em; margin-right: 15px">{{ username }}</el-button>
               <el-dropdown-menu slot="dropdown" >
                 <el-dropdown-item command="侧边栏开关">侧边栏开关</el-dropdown-item>
-                <!-- <el-dropdown-item v-if="username=='admin'" command="添加歌曲">添加歌曲</el-dropdown-item> -->
                 <el-dropdown-item command="退出登录">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
@@ -73,14 +73,13 @@
       </el-header>
     
       <!-- 音乐表单 -->
-      <el-main style="height: 48em">
-        <div v-if="musicView">
-          <el-table :data="musics">
+      <el-main>
+          <el-table :data="musicView ? musics : recommendMusics">
             <el-table-column prop="songName" label="音乐标题" width="400" />
-            <el-table-column prop="singerName" label="歌手" width="400" />
+            <el-table-column prop="singerName" label="歌手" width="300" />
             <el-table-column prop="duration" label="时长" width="200" />
             <el-table-column prop="songLanguage" label="语种" />
-            <el-table-column fixed="right" label="操作" width="300" align="center">
+            <el-table-column fixed="right" label="操作" align="center">
               <template slot-scope="scope">
                 <el-button type="text" size="small" v-if="username == 'admin'" @click="manageSong(scope.row)">管理</el-button>
                 <el-button type="text" size="small" @click="initPlayMusics(scope.row.songId, false)">播放</el-button>
@@ -89,36 +88,17 @@
               </template>
             </el-table-column>
           </el-table><br>
-          <el-pagination @current-change="handleCurrentChange" :current-page="currentPage" :page-size="11" layout="total, prev, pager, next, jumper"
+          <el-pagination v-show="musicView && pagination" @current-change="handleCurrentChange" :current-page="currentPage" :page-size="pageSize" layout="total, prev, pager, next, jumper"
             :total="totalPage">
           </el-pagination>
-        </div>
-        <div v-else>
-          <el-table :data="recommendMusics">
-            <el-table-column prop="songName" label="音乐标题" width="400" />
-            <el-table-column prop="singerName" label="歌手" width="400" />
-            <el-table-column prop="duration" label="时长" width="200" />
-            <el-table-column prop="numOfCollection" label="热度" />
-            <el-table-column fixed="right" label="操作" width="300" align="center">
-              <template slot-scope="scope">
-                <el-button type="text" size="small" v-if="username == 'admin'" @click="manageSong(scope.row)">管理</el-button>
-                <el-button type="text" size="small" @click="initPlayMusics(scope.row.songId, false)">播放</el-button>
-                <el-button type="text" size="small" @click="manageFavorite(scope.row, true)">收藏</el-button>
-                <el-button type="text" size="small" @click="download(scope.row)">下载</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
       </el-main>
       <!-- 播放器 -->
-      <el-footer style="height: 5em"><br>
-        <audio id="audio" :src="musicUrl" style="width: 100%" @ended="playNext()" controls />
-      </el-footer>
+      <audio id="audio" :src="musicUrl" style="width: 75%; position: fixed; bottom: 2em; right: 4em" @ended="playNext()" controls />
     </el-container>
 
     <!-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- -->
     
-    <!-- 管理窗口：音乐 -->
+    <!-- 1. 管理窗口：音乐 -->
     <el-dialog title="音乐管理" :visible.sync="dialogTableVisible" width="40em">
 
       <el-input v-model="music.songName" class="normal-input" placeholder="请输入音乐标题" maxlength="30" clearable>
@@ -130,12 +110,6 @@
       <el-input v-model="music.songLanguage" class="small-input" placeholder="请输入语种" maxlength="30" clearable>
         <template slot="prepend">&emsp;语种&emsp;</template>
       </el-input><br><br>
-      
-      <!--  class="inline-input" -->
-      <!-- <el-autocomplete v-model="singer.singerName" :fetch-suggestions="getSingers" @select="lockSingerInfo" :disabled="inputDisable"
-                        class="small-input" placeholder="请输入歌手姓名">
-        <template slot="prepend">歌手姓名</template>
-      </el-autocomplete>&emsp;&emsp; -->
 
       <el-input v-model="singer.singerName" :disabled="inputDisable"
                 class="small-input" placeholder="请输入歌手姓名" maxlength="30" clearable>
@@ -167,15 +141,11 @@
         </div>
       </div>
       
-      <!-- 管理窗口：歌手 -->
+      <!-- 1.1. 管理窗口：歌手 -->
       <el-dialog title="歌手信息" :visible.sync="dialogTableVisible2" width="20em" append-to-body>
         <el-input  v-model="singer2.singerName" class="small-input" placeholder="请输入歌手姓名" clearable>
           <template slot="prepend">歌手姓名</template>
         </el-input>&emsp;&emsp;
-        <!-- <el-input v-model="singer2.singerSex"
-                  class="small-input" placeholder="请输入歌手性别" maxlength="30" clearable>
-          <template slot="prepend">&emsp;性别&emsp;</template>
-        </el-input><br><br> -->
         <el-input v-model="singer2.singerNationality"
                   class="small-input" placeholder="歌手所在国籍" maxlength="30" clearable>
           <template slot="prepend">歌手国籍</template>
@@ -192,15 +162,23 @@
           inactive-text="女">
         </el-switch>&emsp;&emsp;&emsp;
         <el-button type="primary" @click="alterSinger()" round>修改</el-button>
-        <!-- <div align="right"><el-button type="primary" @click="alterSinger()" round>修改</el-button>&emsp;</div> -->
       </el-dialog>
-
     </el-dialog>
 
+    <!-- 2. 筛选 -->
+    <el-dialog title="筛选" :visible.sync="chooseVisible" width="40em">
+      歌手选择：
+      <el-select v-model="selectedSinger" placeholder="请选择">
+        <el-option-group v-for="group in allSinger" :key="group.nationality" :label="group.nationality">
+          <el-option v-for="item in group.singer" :key="item.singerName" :label="item.singerName" :value="item.singerName"></el-option>
+        </el-option-group>
+      </el-select><br><br>
+
+      <!-- <el-button @click="resetChoose()">重置</el-button> -->
+      <el-button type="primary" @click="choose()" >确定</el-button>
+    </el-dialog>
 
   </el-container>
-
-
 </template>
 
 <style>
@@ -237,11 +215,16 @@
         duration: '11:02'
       };
       return {
+        pageStyle: "border: 1px solid #eee;" + (window.screen.height == 768 ? " zoom: 0.75" : ""),
+        sideBarStyle: window.screen.height == 768 ? "height: 50em" : "height: 57em",
+
         asideShow: true,  // 侧边栏可视化
         dialogTableVisible: false,  // 音乐管理
         dialogTableVisible2: false, // 歌手管理
+        chooseVisible: false, // 筛选
         inputDisable: false, // 音乐管理专用
         newMusic: false, // 添加歌曲
+        pagination: true, // 分页
 
         username: '',
         musicUrl: '',
@@ -256,7 +239,11 @@
         },
         currentPage: 1,
         totalPage: 0,
+        pageSize: 9,
         showAll: true,
+
+        selectedSinger: '',
+        allSinger: [],
 
         musicView: true,
 
@@ -358,13 +345,15 @@
         this.musicView = true
         this.showAll = false
         this.pageIndex = 1
+        this.pagination = true
         this.search(this.pageIndex)
       },
       search(pageIndex) {
         var form = {
           type: this.condition.type ? this.condition.type : 1,
           value : this.condition.value,
-          pageIndex : pageIndex ? pageIndex : 1
+          pageIndex : pageIndex ? pageIndex : 1,
+          pageSize : this.pageSize
         }
         this.post('/music/search.do', form, (response) => {
           this.musics = response.musics
@@ -376,7 +365,7 @@
       getMusics(pageIndex) {
         this.musicView = true
         this.showAll = true
-        this.post('/music/getMusicList.do', { pageIndex: pageIndex ? pageIndex : 1 }, (response) => {
+        this.post('/music/getMusicList.do', { pageIndex: pageIndex ? pageIndex : 1, pageSize: this.pageSize }, (response) => {
           this.musics = response.musics
           this.totalPage = response.totalPage
         })
@@ -426,11 +415,6 @@
         })
       },
 
-      // 添加歌曲
-      insertMusic() {
-        
-      },
-
       // ----------------------------------------------- 歌手管理
 
       // 管理歌手信息
@@ -440,26 +424,26 @@
       },
 
       // 获取歌手信息
-      getSingers(queryString, callback) {
-        this.post('/music/getSingers.do', {}, (response) => {
-          this.singers = response.singers
-          var results = this.singers.map((singer) => {
-            singer.value = singer.singerName
-            return singer
-          })
-          results = queryString ? results.filter((item) => {
-            return item.value.toLowerCase().indexOf(queryString.toLowerCase()) == 0
-          }) : results
-          callback(results)
-        })
-      },
+      // getSingers(queryString, callback) {
+      //   this.post('/music/getSingers.do', {}, (response) => {
+      //     this.singers = response.singers
+      //     var results = this.singers.map((singer) => {
+      //       singer.value = singer.singerName
+      //       return singer
+      //     })
+      //     results = queryString ? results.filter((item) => {
+      //       return item.value.toLowerCase().indexOf(queryString.toLowerCase()) == 0
+      //     }) : results
+      //     callback(results)
+      //   })
+      // },
 
       // 锁定歌手信息
-      lockSingerInfo(singer) {
-        this.singer = singer
-        if (typeof(singer.singerSex) == 'number')
-          this.singer.singerSex = singer.singerSex == 1 ? '男' : '女'
-      },
+      // lockSingerInfo(singer) {
+      //   this.singer = singer
+      //   if (typeof(singer.singerSex) == 'number')
+      //     this.singer.singerSex = singer.singerSex == 1 ? '男' : '女'
+      // },
 
       // 修改歌手信息
       alterSinger() {
@@ -467,7 +451,6 @@
         singer.singerSex = singer.singerSex ? 1 : 0
         this.post('/music/updateSinger.do', singer, () => {
           this.dialogTableVisible2 = false
-          // this.singer = JSON.parse(JSON.stringify(this.singer2))
           var musics = this.musics.filter((item) => {
             return item.singerName == this.singerName
           })
@@ -476,7 +459,31 @@
           })
       },
 
+      // 获取歌手列表
+      getSingers() {
+        this.post('/music/getSingers.do', {}, (response) => {
+          this.allSinger = response.singers
+          console.warn(response.singers)
+        })
+      },
+
       // ----------------------------------------------- 辅助功能
+
+      resetChoose() {
+        this.selectedSinger = ''
+        this.chooseVisible = true
+      },
+
+      choose() {
+        var form = {
+          singerName: this.selectedSinger
+        }
+        this.post('/music/getMusicList.do', form, (response) => {
+          this.musics = response.musics
+          this.chooseVisible = false
+          this.pagination = false
+        })
+      },
 
       // 功能键的功能实现，因为 el-dropdown-item 不能使用 @click
       dropdownCommand(command) {
@@ -526,6 +533,7 @@
         } else {
           this.getMusics()
           this.getFavoriteMusics()
+          this.getSingers()
         }
       }, () => {
         location = "/"

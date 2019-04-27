@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.tree.commons.annotation.Comment;
 import org.tree.commons.annotation.Ignore;
 import org.tree.commons.support.controller.Result;
+import org.tree.commons.utils.MapUtils;
 import org.tree.ktv.model.SingerInfo;
 import org.tree.ktv.model.SongInfo;
 import org.tree.ktv.model.User;
@@ -20,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.Map;
 
 /**
  * @author er_dong_chen
@@ -95,12 +97,12 @@ public class MusicController {
         return new Result(musicService.getMusicInfoList(conditionVO));
     }
 
-    //    @RequestMapping("/getSingers.do")
-//    public Result getSingers() {
-//        Map<?, ?> map = MapUtils.put("singers", musicService.getSingers()).build();
-//        return new Result(true, "", map);
-//    }
-//
+    @RequestMapping("/getSingers.do")
+    public Result getSingers() {
+        Map<?, ?> map = MapUtils.put("singers", musicService.getSingers()).build();
+        return new Result(map);
+    }
+
 //    /* 获取歌手信息 */
 //    @RequestMapping("/getSingerInfo.do")
 //    public Result getSingerInfo(String singerName) {

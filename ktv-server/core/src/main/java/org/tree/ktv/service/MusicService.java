@@ -15,6 +15,8 @@ import org.tree.ktv.vo.FavoriteVO;
 import org.tree.ktv.vo.MusicVO;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,12 +37,20 @@ public class MusicService {
 
     private String musicDir = "D:/CloudMusic/";
 
-    private Map<Long, MusicVO> cache = new ConcurrentHashMap<>();
+    private Map<Long, MusicVO> cache = new HashMap<>();
 
-    private static final int pageSize = 11;
+    public List<Map<?, ?>> getSingers() {
+//        return mapper.selectByExample(new SingerInfoExample());
 
-    public List<SingerInfo> getSingers() {
-        return mapper.selectByExample(new SingerInfoExample());
+        List<Map<?, ?>> result = new ArrayList<>();
+        List<SingerInfo> singerInfos = mapper.querySelective(new SingerInfoArgs().setSingerName(true).setSingerNationality(true), new SingerInfoExample());
+        singerInfos.stream().collect(Collectors.groupingBy(SingerInfo::getSingerNationality)).forEach((k, v) -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("nationality", k);
+            map.put("singer", v);
+            result.add(map);
+        });
+        return result;
     }
 
     public SingerInfo getSingerInfo(String singerName) {
@@ -61,8 +71,12 @@ public class MusicService {
     public Map<String, ?> getMusicInfoList(ConditionVO condition) {
         UnionSearch unionSearch = new UnionSearch(unionSearchMapper);
         unionSearch.selectColumns(new SongInfoArgs().setAllTrue(), new SingerInfoArgs().setAllTrue());
-        UnionSearch.Criteria criteria = unionSearch.createCriteria()
+        UnionSearch.Criteria criteria = unionSearch.getCriteria()
                 .and(SongInfoColumn.SINGER_ID, "=", SingerInfoColumn.SINGER_ID);
+
+        if (condition.getSingerName() != null && condition.getSingerName().length() != 0)
+            criteria.and(SingerInfoColumn.SINGER_NAME, String.format("= '%s'", condition.getSingerName()));
+
         if (condition.getType() != null) {
             Searchable searchable = null;
             switch (condition.getType()) {
@@ -78,7 +92,12 @@ public class MusicService {
             }
             criteria.and(searchable, String.format("like '%%%s%%'", condition.getValue()));
         }
-        unionSearch.limit((condition.getPageIndex() - 1) * pageSize, pageSize);
+//        int pageSize = condition.getPageSize() == null ? 9 : condition.getPageSize();
+        if (condition.getPageSize() != null) {
+            int pageSize = condition.getPageSize();
+            unionSearch.limit((condition.getPageIndex() - 1) * pageSize, pageSize);
+        }
+
         List<MusicVO> musicVOS = unionSearch.query(MusicVO.class);
 
         cache = musicVOS.stream().collect(Collectors.toMap(
@@ -112,7 +131,7 @@ public class MusicService {
         UnionSearch unionSearch = new UnionSearch(unionSearchMapper);
         unionSearch.selectColumns(new SongInfoArgs().setAllTrue(), new SingerInfoArgs().setAllTrue());
         unionSearch.addColumnAlias(UnionSearch.count(SongInfoColumn.SONG_ID), "numOfCollection");
-        unionSearch.createCriteria()
+        unionSearch.getCriteria()
                 .and(SongInfoColumn.SINGER_ID, "=", SingerInfoColumn.SINGER_ID)
                 .and(SongInfoColumn.SONG_ID, "=", FavoriteColumn.SONG_ID)
                 .and(FavoriteColumn.GENERATION, String.format("= %s", generation));
@@ -124,7 +143,7 @@ public class MusicService {
     public Map<String, ?> getFavorites(long userId) {
         UnionSearch unionSearch = new UnionSearch(unionSearchMapper);
         unionSearch.selectColumns(new SongInfoArgs().setSongId(true).setSongName(true));
-        unionSearch.createCriteria()
+        unionSearch.getCriteria()
                 .and(FavoriteColumn.USER_ID, "=" + userId)
                 .and(FavoriteColumn.SONG_ID, "=", SongInfoColumn.SONG_ID);
         return MapUtils.put("favoriteMusics", unionSearch.query(FavoriteVO.class)).build();
