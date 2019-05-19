@@ -1,6 +1,7 @@
 package generate.model;
 
 import org.tree.commons.generate.annotation.Column;
+import org.tree.commons.generate.annotation.Table;
 
 import java.util.Date;
 
@@ -8,7 +9,7 @@ import java.util.Date;
  * @author er_dong_chen
  * @date 2019/3/14
  */
-//@Table(comment = "用户")
+@Table(comment = "用户")
 public class User {
     @Column(id = true)
     long id;

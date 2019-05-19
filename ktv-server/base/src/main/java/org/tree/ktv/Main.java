@@ -74,7 +74,7 @@ public class Main {
         System.out.println();
     }
 
-    public String getNationality(String language) {
+    public static String getNationality(String language) {
         switch (language) {
             case "中文":
                 return "中国";
@@ -86,14 +86,14 @@ public class Main {
         return null;
     }
 
-    public String getMusicDuration(File mp3File) throws Exception {
+    public static String getMusicDuration(File mp3File) throws Exception {
         MP3File f = (MP3File) AudioFileIO.read(mp3File);
         MP3AudioHeader audioHeader = (MP3AudioHeader) f.getAudioHeader();
         long seconds = audioHeader.getTrackLength();
         return LocalTime.ofSecondOfDay(seconds).toString();
     }
 
-    public String getAbbr(String name) {
+    public static String getAbbr(String name) {
         if (name.indexOf("(") != -1)
             name = name.substring(0, name.indexOf("("));
         if (name.indexOf("（") != -1)

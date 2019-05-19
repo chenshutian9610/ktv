@@ -23,7 +23,7 @@ import java.util.List;
 @Transactional
 public class UserService {
 
-    Logger logger = LoggerFactory.getLogger(UserService.class);
+    private Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     private IntegratedMapper mapper;
@@ -40,7 +40,7 @@ public class UserService {
             return "该用户名已被占用！";
         User user = registerVO.parseUser();
         user.setRegisterDate(new Date());
-        user.setPassword(MD5.encrypt(user.getPassword()));
+        user.setPassword(MD5.wrap(user.getPassword()));
         return mapper.insertSelective(user) == 1 ? null : "个人信息错误！";
     }
 
@@ -49,7 +49,7 @@ public class UserService {
         userExample.createCriteria().andUsernameEqualTo(username);
         long count = mapper.countByExample(userExample);
 
-        // 上保险，不影响程序运行
+        // 不影响程序运行
         if (count > 0 && count != 1)
             if (logger.isErrorEnabled())
                 logger.error(String.format("用户表存在 %s 个同名记录", count));
@@ -66,7 +66,7 @@ public class UserService {
                 .andBirthdayEqualTo(resetPasswordVO.getBirthday());
 
         User user = new User();
-        user.setPassword(MD5.encrypt(resetPasswordVO.getPassword()));
+        user.setPassword(MD5.wrap(resetPasswordVO.getPassword()));
         return mapper.updateByExampleSelective(user, userExample) == 1 ? null : "个人信息错误！";
     }
 }

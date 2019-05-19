@@ -1,9 +1,10 @@
 <template>
-  <el-container :style="pageStyle">
+  <!--  style="position:fixed;height:100%;width:100%" 打开弹窗，黑屏 -->
+  <el-container>
 
     <!-- 侧边栏 -->
     <transition name="el-zoom-in-center">
-      <el-aside width="20%" v-if="asideShow" :style="sideBarStyle" align="left">
+      <el-aside width="20%" v-if="asideShow" align="left" :style="asideStyle">
         <el-menu :default-openeds="['1', '2']">
 
           <!-- 我的收藏 -->
@@ -58,28 +59,41 @@
               inactive-text="收藏榜单">
             </el-switch>
           </span>
-          <span style="position:absolute;right:2em">
+          <span style="position:absolute;right:1em;">
             <!-- 功能 -->
-            欢迎您，
             <el-dropdown @command="dropdownCommand">
-              <el-button type="text" style="font-size: 1.5em; margin-right: 15px">{{ username }}</el-button>
-              <el-dropdown-menu slot="dropdown" >
+              <div style="width: 8em"><center>
+                <el-button type="info" round size="mini">{{ username }}</el-button>  
+              </center></div>
+              <el-dropdown-menu slot="dropdown">
                 <el-dropdown-item command="侧边栏开关">侧边栏开关</el-dropdown-item>
+                <el-dropdown-item command="上传歌曲" v-show="username == 'admin'">上传歌曲</el-dropdown-item>
                 <el-dropdown-item command="退出登录">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
           </span>
+          <el-upload
+            class="upload-demo"
+            action="/music/upload.do"
+            :show-file-list="showFileList"
+            :before-upload="beforeUpload"
+            :on-success="onSuccess"
+            v-show="showUploadButton"
+            multiple>
+            <el-button id="uploadButton" size="small" type="primary">上传歌曲</el-button>
+            <div slot="tip" class="el-upload__tip"></div>
+          </el-upload>
         </div>
       </el-header>
     
       <!-- 音乐表单 -->
-      <el-main>
+      <el-main :style="screenAdapter">
           <el-table :data="musicView ? musics : recommendMusics">
-            <el-table-column prop="songName" label="音乐标题" width="400" />
-            <el-table-column prop="singerName" label="歌手" width="300" />
-            <el-table-column prop="duration" label="时长" width="200" />
-            <el-table-column prop="songLanguage" label="语种" />
-            <el-table-column fixed="right" label="操作" align="center">
+            <el-table-column prop="songName" label="音乐标题" width="300" />
+            <el-table-column prop="singerName" label="歌手" width="200" />
+            <el-table-column prop="duration" label="时长" width="200"/>
+            <el-table-column prop="songLanguage" label="语种" width="200"/>
+            <el-table-column fixed="right" label="操作" align="left">
               <template slot-scope="scope">
                 <el-button type="text" size="small" v-if="username == 'admin'" @click="manageSong(scope.row)">管理</el-button>
                 <el-button type="text" size="small" @click="initPlayMusics(scope.row.songId, false)">播放</el-button>
@@ -88,12 +102,14 @@
               </template>
             </el-table-column>
           </el-table><br>
-          <el-pagination v-show="musicView && pagination" @current-change="handleCurrentChange" :current-page="currentPage" :page-size="pageSize" layout="total, prev, pager, next, jumper"
-            :total="totalPage">
+          <el-pagination v-show="musicView && pagination" @current-change="handleCurrentChange" layout="total, prev, pager, next, jumper" 
+            :current-page="currentPage" :page-size="pageSize" :total="totalPage">
           </el-pagination>
       </el-main>
       <!-- 播放器 -->
-      <audio id="audio" :src="musicUrl" style="width: 75%; position: fixed; bottom: 2em; right: 4em" @ended="playNext()" controls />
+      <center>
+        <audio id="audio" :src="musicUrl" :style="audioStyle" @ended="playNext()" controls />
+      </center>
     </el-container>
 
     <!-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- -->
@@ -136,7 +152,7 @@
         </div>
         <div v-else>
           <el-button type="primary" @click="alterMusic()" round>修改</el-button>&emsp;&emsp;
-          <el-button type="danger" round>删除</el-button>
+          <el-button type="danger" @click="deleteMusic()" round>删除</el-button>
           <el-button type="text" style="position: absolute; right: 4em" @click="manageSinger()">管理该歌手信息</el-button>
         </div>
       </div>
@@ -145,15 +161,15 @@
       <el-dialog title="歌手信息" :visible.sync="dialogTableVisible2" width="20em" append-to-body>
         <el-input  v-model="singer2.singerName" class="small-input" placeholder="请输入歌手姓名" clearable>
           <template slot="prepend">歌手姓名</template>
-        </el-input>&emsp;&emsp;
+        </el-input><br><br>
         <el-input v-model="singer2.singerNationality"
                   class="small-input" placeholder="歌手所在国籍" maxlength="30" clearable>
           <template slot="prepend">歌手国籍</template>
-        </el-input>&emsp;&emsp;
-        <el-input v-model="singer2.singerRegion"
+        </el-input><br><br>
+        <!-- <el-input v-model="singer2.singerRegion"
                   class="small-input" placeholder="歌手所在地区" maxlength="30" clearable>
           <template slot="prepend">所属地区</template>
-        </el-input><br><br>
+        </el-input><br><br> -->
         
         <el-tag type="info">性别</el-tag>&emsp; 
         <el-switch
@@ -206,17 +222,16 @@
 <script>
   export default {
     data() {
-      const item = {
-        songName: '老鼠爱大米',
-        singerName: 'er_dong_chen',
-        songLanguage: '汉语',
-        songNameAbbr: 'LSADM',
-        album: '河东狮',
-        duration: '11:02'
-      };
+      // const item = {
+      //   songName: '老鼠爱大米',
+      //   singerName: 'er_dong_chen',
+      //   songLanguage: '汉语',
+      //   songNameAbbr: 'LSADM',
+      //   album: '河东狮',
+      //   duration: '11:02'
+      // };
       return {
-        pageStyle: "border: 1px solid #eee;" + (window.screen.height == 768 ? " zoom: 0.75" : ""),
-        sideBarStyle: window.screen.height == 768 ? "height: 50em" : "height: 57em",
+        // sideBarStyle: window.screen.height == 768 ? "height: 50em" : "height: 57em",
 
         asideShow: true,  // 侧边栏可视化
         dialogTableVisible: false,  // 音乐管理
@@ -225,6 +240,15 @@
         inputDisable: false, // 音乐管理专用
         newMusic: false, // 添加歌曲
         pagination: true, // 分页
+
+        /* 文件上传 */
+        showFileList : false,
+        showUploadButton: false,
+
+        
+        screenAdapter: /* "border: 1px solid #eee;" +  */(window.screen.height == 768 ? " zoom: 0.7" : ""),
+        audioStyle: "position: fixed; bottom: 1em; right: 2em; width: 75%;",
+        asideStyle: (window.screen.height == 768 ? " zoom: 0.7" : "") + "; height: " + (window.screen.height + 148) + "px",
 
         username: '',
         musicUrl: '',
@@ -253,7 +277,7 @@
         singers: [],
         music: {},
         recommendMusics: [],
-        musics: Array(20).fill(item),
+        musics: [] // Array(20).fill(item),
       }
     },
     methods: {
@@ -395,24 +419,47 @@
         } else {
           this.singerName = item.singerName
           this.music = item
-          this.singer.singerId = this.music.singerId
-          this.singer.singerName = this.music.singerName
-          this.singer.singerSex = this.num2sex(this.music.singerSex)
-          this.singer.singerNationality = this.music.singerNationality
-          this.singer.singerRegion = this.music.singerRegion ? this.music.singerRegion : '未知'
+          this.copyFromMusicToSinger()
         }
         this.inputDisable = true
         this.newMusic = false
         this.dialogTableVisible = true
       },
 
+      copyFromMusicToSinger() {
+          this.singer.singerId = this.music.singerId
+          this.singer.singerName = this.music.singerName
+          this.singer.singerSex = this.num2sex(this.music.singerSex)
+          this.singer.singerNationality = this.music.singerNationality
+          this.singer.singerRegion = this.music.singerRegion ? this.music.singerRegion : '未知'
+      },
+
       // 修改音乐信息
       alterMusic() {
         this.dialogTableVisible = false
-        console.warn(this.music)
-        this.post('/music/updateSong.do',this.music, (response) => {
+        this.post('/music/updateSong.do', this.music, (response) => {
           this.$message.success('操作成功')
         })
+      },
+
+      // 删除音乐
+      deleteMusic() {
+        this.dialogTableVisible = false
+        this.post('/music/deleteSong.do', { songId : this.music.songId }, (response) => {
+          this.musics = this.musics.filter((music) => music.songId != this.music.songId)
+          this.$message.success('操作成功')
+        })
+      },
+
+      beforeUpload(file, fileList) {
+        if (/^.*[ ]-[ ].*\.mp3$/.test(file.name))
+          return true;
+        this.$message.error("歌曲文件名格式必须为 '歌手 - 歌名.mp3'")
+        return false;
+      },  
+
+      onSuccess(file, fileList) {
+        this.$message.success('上传成功')
       },
 
       // ----------------------------------------------- 歌手管理
@@ -421,29 +468,8 @@
       manageSinger() {
         this.dialogTableVisible2 = true
         this.singer2 = JSON.parse(JSON.stringify(this.singer))
+        this.singer2.singerSex = this.music.singerSex == 0 ? false : true
       },
-
-      // 获取歌手信息
-      // getSingers(queryString, callback) {
-      //   this.post('/music/getSingers.do', {}, (response) => {
-      //     this.singers = response.singers
-      //     var results = this.singers.map((singer) => {
-      //       singer.value = singer.singerName
-      //       return singer
-      //     })
-      //     results = queryString ? results.filter((item) => {
-      //       return item.value.toLowerCase().indexOf(queryString.toLowerCase()) == 0
-      //     }) : results
-      //     callback(results)
-      //   })
-      // },
-
-      // 锁定歌手信息
-      // lockSingerInfo(singer) {
-      //   this.singer = singer
-      //   if (typeof(singer.singerSex) == 'number')
-      //     this.singer.singerSex = singer.singerSex == 1 ? '男' : '女'
-      // },
 
       // 修改歌手信息
       alterSinger() {
@@ -455,7 +481,10 @@
             return item.singerName == this.singerName
           })
           if (musics.length != 0)
-            musics[0].singerName = this.singer.singerName
+            musics[0].singerName = singer.singerName
+            musics[0].singerNationality = singer.singerNationality
+            musics[0].singerSex = singer.singerSex ? 1 : 0
+            this.copyFromMusicToSinger()
           })
       },
 
@@ -491,12 +520,8 @@
           this.logout()
         else if (command == '侧边栏开关')
           this.asideShow = !this.asideShow
-        else if (command == '添加歌曲') {
-          this.newMusic = true
-          this.inputDisable = false
-          this.music = {}
-          this.singer = {}
-          this.dialogTableVisible = true
+        else if (command == '上传歌曲') {
+          document.getElementById('uploadButton').click()
         }
       },
 
@@ -523,6 +548,9 @@
       musicView: function() {
         if (!this.musicView)
           this.getRecommendMusics()
+      },
+      asideShow: function() {
+        this.audioStyle = "position: fixed; bottom: 1em; right: 2em;"+ (this.asideShow ? "width: 75%;" : "width: 96%;")
       }
     },
     mounted: function() {
@@ -532,7 +560,8 @@
           location = "/"
         } else {
           this.getMusics()
-          this.getFavoriteMusics()
+          if (this.username != 'admin')
+            this.getFavoriteMusics()
           this.getSingers()
         }
       }, () => {

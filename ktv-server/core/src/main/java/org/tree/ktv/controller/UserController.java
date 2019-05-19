@@ -34,14 +34,12 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private HttpSession session;
-
     /* 登陆 */
     @RequestMapping("/login.do")
     public Result login(@Valid LoginVO loginVO,
                         @Ignore BindingResult bindingResult,
-                        @Ignore HttpServletResponse response) throws UnsupportedEncodingException {
+                        @Ignore HttpServletResponse response,
+                        @Ignore HttpSession session) throws UnsupportedEncodingException {
 
         // 非空检查
         if (bindingResult.hasErrors())
@@ -60,8 +58,8 @@ public class UserController {
                 return new Result(Result.PASSWORD_ERROR);
 
             user = new User();
-            user.setUsername(properties.getProperty("username"));
             user.setId(Long.parseLong(properties.getProperty("id")));
+            user.setUsername(properties.getProperty("username"));
         } else {
             user = userService.login(loginVO.getUsername(), loginVO.getPassword());
             if (user == null)
@@ -79,20 +77,22 @@ public class UserController {
 
     /* 退出登陆 */
     @RequestMapping("/logout.do")
-    public Result logout() {
+    public Result logout(@Ignore HttpSession session) {
         session.invalidate();
         return new Result(true);
     }
 
     /* 登陆测试 */
     @RequestMapping("/loginTest.do")
-    public Result loginTest() {
+    public Result loginTest(@Ignore HttpSession session) {
         return new Result(session.getAttribute("user") != null);
     }
 
     /* 注册 */
     @RequestMapping("/register.do")
-    public Result register(@Valid RegisterVO registerVO, @Ignore BindingResult bindingResult) {
+    public Result register(@Valid RegisterVO registerVO,
+                           @Ignore BindingResult bindingResult,
+                           @Ignore HttpSession session) {
 
         // 非空检查
         if (bindingResult.hasErrors())
@@ -111,7 +111,9 @@ public class UserController {
 
     /* 重置密码 */
     @RequestMapping("/resetPassword.do")
-    public Result resetPassword(@Valid ResetPasswordVO resetPasswordVO, @Ignore BindingResult bindingResult) {
+    public Result resetPassword(@Valid ResetPasswordVO resetPasswordVO,
+                                @Ignore BindingResult bindingResult,
+                                @Ignore HttpSession session) {
 
         // 非空检查
         if (bindingResult.hasErrors())
@@ -127,7 +129,7 @@ public class UserController {
 
     /* 获取图片验证码 */
     @RequestMapping("/getPictureCode.do")
-    public void getPictureCode(@Ignore HttpServletResponse response) throws IOException {
+    public void getPictureCode(@Ignore HttpServletResponse response, @Ignore HttpSession session) throws IOException {
         response.setContentType("image/jpeg");
         response.setHeader("Pragma", "no-cache");
         response.setHeader("Cache-Control", "no-cache");

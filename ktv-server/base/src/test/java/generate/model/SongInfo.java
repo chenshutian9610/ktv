@@ -1,12 +1,13 @@
 package generate.model;
 
 import org.tree.commons.generate.annotation.Column;
+import org.tree.commons.generate.annotation.Table;
 
 /**
  * @author er_dong_chen
  * @date 2019/3/14
  */
-//@Table(comment = "歌曲信息")
+@Table(comment = "歌曲信息")
 public class SongInfo {
     @Column(id = true, comment = "编号")
     long song_id;

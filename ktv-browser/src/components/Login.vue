@@ -41,9 +41,18 @@
           <template slot="prepend">真实姓名</template>
       </el-input><br><br>
       
-      性别：&emsp;
-      <el-radio v-model="user.userSex" label="1">男</el-radio>
-      <el-radio v-model="user.userSex" label="0">女</el-radio>&emsp;&emsp;
+  
+      <el-input v-model="password" placeholder="请设置您的密码"  maxlength="20"  type ="password"  style="width: 90%" clearable>
+        <template slot="prepend">&emsp;密码&emsp;</template>
+      </el-input><br><br> 
+
+      <el-input v-model="rePassword" placeholder="再次输入您的密码"  maxlength="20"  type ="password" style="width: 90%" clearable>
+        <template slot="prepend" >确认密码</template>
+      </el-input><br><br>
+
+      性别：&ensp;
+      <el-radio v-model="user.userSex" label="1" style="margin-right: 10px">男</el-radio>
+      <el-radio v-model="user.userSex" label="0" style="margin-right: 10px">女</el-radio>&emsp;
       
       出生日期：&emsp;
       <el-date-picker
@@ -52,18 +61,10 @@
         placeholder="选择日期"
         style="width: 40%">
       </el-date-picker><br><br>
-  
-      <el-input v-model="password" placeholder="请设置您的密码"  maxlength="20"  type ="password"  style="width: 90%" clearable>
-        <template slot="prepend">&emsp;密码&emsp;</template>
-      </el-input><br><br> 
-
-      <el-input v-model="rePassword" placeholder="再次输入您的密码"  maxlength="20"  type ="password" style="width: 90%" clearable>
-        <template slot="prepend" >确认密码</template>
-      </el-input><br><br><br>
 
       <img :src="url + millseconds" style="width: 90px; height: 38px;  vertical-align: middle" @click="getPictureCode()">&ensp;
       <el-input v-model="user.pictureCode" placeholder="请输入图片验证码" style="width: 30%;" maxlength="4" clearable/>
-      &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+      &emsp;&emsp;&emsp;&emsp;&emsp;
       <el-button type="primary" @click="go()">{{ dialogButton }}</el-button>
 
     </el-dialog>
@@ -120,9 +121,14 @@ export default {
 
     // 忘记密码或注册账户
     go() {
+      var username_chinese_format_length = this.user.username.match(/[\u4e00-\u9fa5]*/g).join('').length // 中文字符所占的长度
+      var username_real_length = this.user.username.length + username_chinese_format_length // 一个中文字符等于两个英文字符长度
+      
       if (!this.user.username) {
         this.$message.error('账号不能为空')
         return;
+      } else if (username_real_length > 12) {
+        this.$message.error('账户名长度过长：（一个中文字符等于两个英文字符长度，以英文字符的标准来说，长度不能大于 12')
       } else if (!this.user.realName) {
         this.$message.error('真实姓名不能为空')
         return;

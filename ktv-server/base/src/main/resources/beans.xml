@@ -38,7 +38,7 @@
     </bean>
     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer" p:basePackage="org.tree.ktv.mapper"/>
 
-    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig"
+    <!--<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig"
           p:maxTotal="${redis.pool.maxTotal}"
           p:maxIdle="${redis.pool.maxIdle}"
           p:minIdle="${redis.pool.minIdle}"
@@ -62,5 +62,5 @@
           p:hashKeySerializer-ref="stringRedisSerializer"
           p:hashValueSerializer-ref="jackson2JsonRedisSerializer"/>
 
-    <!--<bean id="stringRedisTemplate" class="org.springframework.data.redis.core.StringRedisTemplate" p:connectionFactory-ref="jedisConnectionFactory"/>-->
+    <bean id="stringRedisTemplate" class="org.springframework.data.redis.core.StringRedisTemplate" p:connectionFactory-ref="jedisConnectionFactory"/>-->
 </beans>

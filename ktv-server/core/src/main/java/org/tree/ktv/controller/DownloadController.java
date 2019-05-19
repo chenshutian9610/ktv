@@ -28,8 +28,11 @@ public class DownloadController {
     @RequestMapping("/download.do")
     public ResponseEntity<byte[]> download(@Comment("歌曲编号") Long songId) throws IOException {
 
-        File file = new File(musicService.getMusicPath(songId));
-        if (!file.exists())
+        if (songId == null)
+            return null;
+
+        File file = musicService.getMusicFile(songId);
+        if (file == null)
             return null;
 
         HttpHeaders header = new HttpHeaders();
